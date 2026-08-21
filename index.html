@@ -203,7 +203,7 @@
                 e.dataTransfer.setData('text/plain', option);
             });
 
-            dragContainer.appendChild(item);
+            document.body.appendChild(item); // 👈 Puts items on the main page layer directly
         });
     }
 
