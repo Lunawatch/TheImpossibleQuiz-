@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D Image Quiz</title>
+    <title>Drag & Drop Logic Game</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -14,8 +14,9 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            user-select: none;
         }
-        .quiz-container {
+        .container {
             background: #161623;
             padding: 30px;
             border-radius: 15px;
@@ -24,149 +25,217 @@
             width: 90%;
             max-width: 500px;
         }
-        h2 { margin-bottom: 20px; font-size: 24px; }
-        .image-box {
+        .hidden { display: none !important; }
+        h1 { color: #4e54c8; margin-bottom: 10px; }
+        h2 { margin-bottom: 20px; font-size: 22px; }
+        
+        /* Buttons */
+        button {
+            padding: 14px 28px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-primary { background: #4e54c8; color: white; width: 100%; }
+        .btn-primary:hover { background: #6469ff; }
+        .btn-skip { background: #e94560; color: white; padding: 10px 20px; font-size: 14px; }
+        .btn-skip:hover { background: #ff5e7e; }
+
+        /* Game Layout */
+        .image-drop-zone {
             width: 100%;
             height: 200px;
             background: #232338;
+            border: 3px dashed #4e54c8;
             border-radius: 10px;
             margin-bottom: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            position: relative;
         }
-        .image-box img {
+        .image-drop-zone img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
         }
-        .options-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
+        .image-drop-zone.drag-over {
+            border-color: #4ecc71;
+            background: #2a2a45;
         }
-        button {
-            padding: 12px;
-            font-size: 16px;
-            border: none;
+
+        /* Drag Items */
+        .drag-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .drag-item {
+            background: #30304d;
+            padding: 12px 20px;
             border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.2s;
+            cursor: grab;
             font-weight: bold;
+            border: 2px solid #4e54c8;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
-        .btn-option { background: #4e54c8; color: white; }
-        .btn-option:hover { background: #6469ff; }
-        .controls {
+        .drag-item:active { cursor: grabbing; }
+
+        .footer-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
             border-top: 1px solid #232338;
             padding-top: 15px;
         }
-        .btn-skip { background: #e94560; color: white; }
-        .btn-skip:hover { background: #ff5e7e; }
-        .score-board { font-size: 18px; color: #4ecc71; }
+        .score { font-size: 18px; color: #4ecc71; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="quiz-container" id="quiz">
-    <h2 id="question">Question Text</h2>
-    <div class="image-box">
-        <!-- Change the URLs below to use whatever images you want -->
-        <img id="quiz-img" src="" alt="Quiz Visual">
+    <!-- 🏠 HOMEPAGE SCREEN -->
+    <div class="container" id="home-screen">
+        <h1>Logic Puzzle</h1>
+        <p style="color: #a0a0ba; margin-bottom: 30px;">Drag the correct answer box onto the image!</p>
+        <button class="btn-primary" id="start-btn">Play Game 🎮</button>
     </div>
-    <div class="options-container" id="options">
-        <!-- Buttons generate here dynamically -->
+
+    <!-- 🎮 GAMEPLAY SCREEN -->
+    <div class="container hidden" id="game-screen">
+        <h2 id="question-text">Loading question...</h2>
+        
+        <!-- The Target Drop Area -->
+        <div class="image-drop-zone" id="drop-zone">
+            <img id="quiz-img" src="" alt="Quiz Visual">
+        </div>
+
+        <!-- The Draggable Choices -->
+        <div class="drag-options" id="drag-options-container">
+            <!-- Dynamic drag items go here -->
+        </div>
+
+        <div class="footer-controls">
+            <div class="score">Score: <span id="score-val">0</span></div>
+            <button class="btn-skip" id="skip-btn">Skip ➡️</button>
+        </div>
     </div>
-    <div class="controls">
-        <div class="score-board">Score: <span id="score">0</span></div>
-        <button class="btn-skip" id="skip-btn">Skip ➡️</button>
+
+    <!-- 🎉 END SCREEN -->
+    <div class="container hidden" id="end-screen">
+        <h2>🎉 Finished!</h2>
+        <p style="font-size: 20px;">Final Score: <strong style="color:#4ecc71;" id="final-score">0</strong></p>
+        <button class="btn-primary" onclick="location.reload()">Play Again</button>
     </div>
-</div>
 
 <script>
-    // 🧠 YOUR QUIZ DATA - Edit questions, images, choices, and answers here!
+    // 🧠 CONFIGURATION: Keep your file names exactly matching your uploaded images!
     const quizData = [
         {
-            question: "Which celestial body is this close-up of?",
-            image: "https://unsplash.com", 
-            options: ["The Moon", "Mars", "Mercury"],
-            correct: 0
+            question: "Drag the right pilot for this spaceship:",
+            image: "pic1.png", 
+            options: ["Alien", "Human", "Robot"],
+            correct: "Alien" // Must match text exactly
         },
         {
-            question: "What type of animal logic dictates this profile?",
-            image: "https://unsplash.com",
-            options: ["A very good dog", "A sneaky cat", "A tiny wolf"],
-            correct: 0
-        },
-        {
-            question: "How many months have 28 days?",
-            image: "https://unsplash.com",
-            options: ["Only 1", "All 12 of them", "Depends on leap years"],
-            correct: 1
+            question: "Match the animal to its correct logic box:",
+            image: "pic2.png",
+            options: ["Dog", "Cat", "Bird"],
+            correct: "Dog"
         }
     ];
 
-    let currentQuestionIndex = 0;
+    let currentIdx = 0;
     let score = 0;
 
-    const questionEl = document.getElementById('question');
-    const imageEl = document.getElementById('quiz-img');
-    const optionsContainer = document.getElementById('options');
-    const scoreEl = document.getElementById('score');
-    const skipBtn = document.getElementById('skip-btn');
+    // Screens
+    const homeScreen = document.getElementById('home-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const endScreen = document.getElementById('end-screen');
 
-    function loadQuiz() {
-        if (currentQuestionIndex >= quizData.length) {
-            showEndScreen();
+    // Game Elements
+    const startBtn = document.getElementById('start-btn');
+    const skipBtn = document.getElementById('skip-btn');
+    const dropZone = document.getElementById('drop-zone');
+    const questionText = document.getElementById('question-text');
+    const quizImg = document.getElementById('quiz-img');
+    const dragContainer = document.getElementById('drag-options-container');
+    const scoreVal = document.getElementById('score-val');
+    const finalScore = document.getElementById('final-score');
+
+    // Switch Screens
+    startBtn.addEventListener('click', () => {
+        homeScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        loadLevel();
+    });
+
+    // Load Levels & Setup Drag Events
+    function loadLevel() {
+        if (currentIdx >= quizData.length) {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            finalScore.innerText = score;
             return;
         }
 
-        const currentQuiz = quizData[currentQuestionIndex];
-        questionEl.innerText = currentQuiz.question;
-        imageEl.src = currentQuiz.image;
-        optionsContainer.innerHTML = '';
+        const data = quizData[currentIdx];
+        questionText.innerText = data.question;
+        quizImg.src = data.image;
+        dragContainer.innerHTML = '';
 
-        currentQuiz.options.forEach((option, index) => {
-            const btn = document.createElement('button');
-            btn.classList.add('btn-option');
-            btn.innerText = option;
-            btn.addEventListener('click', () => checkAnswer(index));
-            optionsContainer.appendChild(btn);
+        // Generate drag buttons dynamically
+        data.options.forEach(option => {
+            const item = document.createElement('div');
+            item.classList.add('drag-item');
+            item.innerText = option;
+            item.setAttribute('draggable', 'true');
+            
+            // HTML5 Drag Events
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', option);
+            });
+
+            dragContainer.appendChild(item);
         });
     }
 
-    function checkAnswer(selectedIndex) {
-        if (selectedIndex === quizData[currentQuestionIndex].correct) {
+    // Drop Zone Event Listeners
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault(); // Required to allow dropping
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        
+        const droppedText = e.dataTransfer.getData('text/plain');
+        const correctText = quizData[currentIdx].correct;
+
+        if (droppedText === correctText) {
             score += 100;
-            scoreEl.innerText = score;
+            scoreVal.innerText = score;
         }
-        nextQuestion();
-    }
+        
+        currentIdx++;
+        loadLevel();
+    });
 
-    function nextQuestion() {
-        currentQuestionIndex++;
-        loadQuiz();
-    }
-
-    function showEndScreen() {
-        document.getElementById('quiz').innerHTML = `
-            <h2>🎉 Quiz Finished!</h2>
-            <p style="font-size: 20px;">Your Final Score: <strong style="color:#4ecc71;">${score}</strong></p>
-            <button onclick="location.reload()" style="background:#4e54c8; color:white; width:100%;">Play Again</button>
-        `;
-    }
-
-    // ➡️ Skip Button Trigger
-    skipBtn.addEventListener('click', nextQuestion);
-
-    // Initial Load
-    loadQuiz();
+    // Skip functionality
+    skipBtn.addEventListener('click', () => {
+        currentIdx++;
+        loadLevel();
+    });
 </script>
-
 </body>
 </html>
