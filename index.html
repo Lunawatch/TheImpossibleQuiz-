@@ -77,14 +77,16 @@
             flex-wrap: wrap;
         }
         .drag-item {
-            background: #30304d;
-            padding: 12px 20px;
-            border-radius: 8px;
+            position: absolute; /* 👈 This allows free movement anywhere */
             cursor: grab;
-            font-weight: bold;
             border: 2px solid #4e54c8;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            background: #30304d;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            touch-action: none; /* Prevents screen scrolling on laptops */
         }
+        .drag-item:active { cursor: grabbing; }
+        
         .drag-item:active { cursor: grabbing; }
 
         .footer-controls {
@@ -137,8 +139,8 @@
     // 🧠 CONFIGURATION: Keep your file names exactly matching your uploaded images!
     const quizData = [
         {
-            question: "Drag the right pilot for this spaceship:",
-            image: "pic1.png", 
+            question: "",
+            image: "", 
             options: ["Alien", "Human", "Robot"],
             correct: "Alien" // Must match text exactly
         },
