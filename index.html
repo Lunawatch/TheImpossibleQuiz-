@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Image Quiz</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .quiz-container {
+            background: #161623;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+        h2 { margin-bottom: 20px; font-size: 24px; }
+        .image-box {
+            width: 100%;
+            height: 200px;
+            background: #232338;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .image-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: bold;
+        }
+        .btn-option { background: #4e54c8; color: white; }
+        .btn-option:hover { background: #6469ff; }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            border-top: 1px solid #232338;
+            padding-top: 15px;
+        }
+        .btn-skip { background: #e94560; color: white; }
+        .btn-skip:hover { background: #ff5e7e; }
+        .score-board { font-size: 18px; color: #4ecc71; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz">
+    <h2 id="question">Question Text</h2>
+    <div class="image-box">
+        <!-- Change the URLs below to use whatever images you want -->
+        <img id="quiz-img" src="" alt="Quiz Visual">
+    </div>
+    <div class="options-container" id="options">
+        <!-- Buttons generate here dynamically -->
+    </div>
+    <div class="controls">
+        <div class="score-board">Score: <span id="score">0</span></div>
+        <button class="btn-skip" id="skip-btn">Skip ➡️</button>
+    </div>
+</div>
+
+<script>
+    // 🧠 YOUR QUIZ DATA - Edit questions, images, choices, and answers here!
+    const quizData = [
+        {
+            question: "Which celestial body is this close-up of?",
+            image: "https://unsplash.com", 
+            options: ["The Moon", "Mars", "Mercury"],
+            correct: 0
+        },
+        {
+            question: "What type of animal logic dictates this profile?",
+            image: "https://unsplash.com",
+            options: ["A very good dog", "A sneaky cat", "A tiny wolf"],
+            correct: 0
+        },
+        {
+            question: "How many months have 28 days?",
+            image: "https://unsplash.com",
+            options: ["Only 1", "All 12 of them", "Depends on leap years"],
+            correct: 1
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById('question');
+    const imageEl = document.getElementById('quiz-img');
+    const optionsContainer = document.getElementById('options');
+    const scoreEl = document.getElementById('score');
+    const skipBtn = document.getElementById('skip-btn');
+
+    function loadQuiz() {
+        if (currentQuestionIndex >= quizData.length) {
+            showEndScreen();
+            return;
+        }
+
+        const currentQuiz = quizData[currentQuestionIndex];
+        questionEl.innerText = currentQuiz.question;
+        imageEl.src = currentQuiz.image;
+        optionsContainer.innerHTML = '';
+
+        currentQuiz.options.forEach((option, index) => {
+            const btn = document.createElement('button');
+            btn.classList.add('btn-option');
+            btn.innerText = option;
+            btn.addEventListener('click', () => checkAnswer(index));
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIndex) {
+        if (selectedIndex === quizData[currentQuestionIndex].correct) {
+            score += 100;
+            scoreEl.innerText = score;
+        }
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        loadQuiz();
+    }
+
+    function showEndScreen() {
+        document.getElementById('quiz').innerHTML = `
+            <h2>🎉 Quiz Finished!</h2>
+            <p style="font-size: 20px;">Your Final Score: <strong style="color:#4ecc71;">${score}</strong></p>
+            <button onclick="location.reload()" style="background:#4e54c8; color:white; width:100%;">Play Again</button>
+        `;
+    }
+
+    // ➡️ Skip Button Trigger
+    skipBtn.addEventListener('click', nextQuestion);
+
+    // Initial Load
+    loadQuiz();
+</script>
+
+</body>
+</html>
